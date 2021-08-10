@@ -1,0 +1,17 @@
+nodes:
+  master:
+    - user: inadati
+      address:
+        external: 34.97.232.42
+        internal: 10.174.0.2
+
+  slave:
+    - user: inadati
+      address:
+        external: 34.97.92.69
+        internal: 10.174.0.3
+    
+    - user: inadati
+      address:
+        external: 34.97.192.109
+        internal: 10.174.0.4
