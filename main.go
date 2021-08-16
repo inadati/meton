@@ -30,7 +30,7 @@ func exec() error {
 	}
 	app.Commands = []*cli.Command{
 		cmd.UpCommand,
-		cmd.DestroyCommand,
+		cmd.DownCommand,
 	}
 
 	return app.Run(os.Args)
