@@ -12,25 +12,29 @@ import (
 	"github.com/meton888/meton/env"
 )
 
-type Zookeeper struct{}
+type Zookeeper struct {
+	Ctx context.Context
+	DockerClient *client.Client
+	Env env.Zookeeper
+}
 
-func (zk *Zookeeper) Up(ctx context.Context, cli *client.Client, envs env.Zookeeper) error {
+func (zk Zookeeper) up() error {
 	imageName := "mesoscloud/zookeeper"
 	containerName := "zookeeper"
 
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	out, err := zk.DockerClient.ImagePull(zk.Ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull %v image", imageName)
 	}
 	io.Copy(os.Stdout, out)
 
-	resp, err := cli.ContainerCreate(
-		ctx,
+	resp, err := zk.DockerClient.ContainerCreate(
+		zk.Ctx,
 		&container.Config{
 			Image: imageName,
 			Env: []string{
-				fmt.Sprintf("MYID=%d", envs.MYID),
-				fmt.Sprintf("SERVERS=%s", envs.SERVERS),
+				fmt.Sprintf("MYID=%d", zk.Env.MYID),
+				fmt.Sprintf("SERVERS=%s", zk.Env.SERVERS),
 			},
 			// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
 		},
@@ -48,7 +52,7 @@ func (zk *Zookeeper) Up(ctx context.Context, cli *client.Client, envs env.Zookee
 		return fmt.Errorf("failed to create %v container", containerName)
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := zk.DockerClient.ContainerStart(zk.Ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start %v container", containerName)
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/meton888/meton/address"
 	"github.com/meton888/meton/config"
+	"github.com/meton888/meton/container"
 	"github.com/meton888/meton/docker"
 	"github.com/meton888/meton/env"
 	"github.com/urfave/cli/v2"
@@ -17,60 +18,83 @@ var UpCommand = &cli.Command{
 	Action: func(c *cli.Context) error {
 		cfg, _ := config.Yaml()
 
-		compoundAddr.New(cfg.Cluster.Nodes.Master)
+		compoundAddr.Init(cfg.Cluster.Nodes.Master)
 
 		for i, node := range cfg.Cluster.Nodes.Master {
-			cli, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
-			cli.NegotiateAPIVersion(ctx)
+			dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+			dockerClient.NegotiateAPIVersion(ctx)
 
-			// start
-			err := zk.Up(ctx, cli, env.Zookeeper{
-				MYID:    i + 1,
-				SERVERS: compoundAddr.Servers,
+			// start zookeeper
+			err := container.Up(container.Zookeeper{
+				Ctx:          ctx,
+				DockerClient: dockerClient,
+				Env: env.Zookeeper{
+					MYID:    i + 1,
+					SERVERS: compoundAddr.Servers,
+				},
 			})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			err = master.Up(ctx, cli, env.MesosMaster{
-				MESOS_HOSTNAME: node.Address.Internal,
-				MESOS_IP:       node.Address.Internal,
-				MESOS_ZK:       fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+			// start mesos master
+			err = container.Up(container.MesosMaster{
+				Ctx:          ctx,
+				DockerClient: dockerClient,
+				Env: env.MesosMaster{
+					MESOS_HOSTNAME: node.Address.Internal,
+					MESOS_IP:       node.Address.Internal,
+					MESOS_ZK:       fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+				},
 			})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			err = marathon.Up(ctx, cli, env.Marathon{
-				MARATHON_HOSTNAME:      node.Address.Internal,
-				MARATHON_HTTPS_ADDRESS: node.Address.Internal,
-				MARATHON_HTTP_ADDRESS:  node.Address.Internal,
-				MARATHON_MASTER:        fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
-				MARATHON_ZK:            fmt.Sprintf("%s/marathon", compoundAddr.Zookeeper),
+			// start marathon
+			err = container.Up(container.Marathon{
+				Ctx:          ctx,
+				DockerClient: dockerClient,
+				Env: env.Marathon{
+					MARATHON_HOSTNAME:      node.Address.Internal,
+					MARATHON_HTTPS_ADDRESS: node.Address.Internal,
+					MARATHON_HTTP_ADDRESS:  node.Address.Internal,
+					MARATHON_MASTER:        fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+					MARATHON_ZK:            fmt.Sprintf("%s/marathon", compoundAddr.Zookeeper),
+				},
 			})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 
-			err = chronos.Up(ctx, cli, env.Chronos{
-				CHRONOS_MASTER: fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
-				CHRONOS_ZK_HOSTS: compoundAddr.Zookeeper,
+			// start chronos
+			err = container.Up(container.Chronos{
+				Ctx:          ctx,
+				DockerClient: dockerClient,
+				Env: env.Chronos{
+					CHRONOS_MASTER:   fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+					CHRONOS_ZK_HOSTS: compoundAddr.Zookeeper,
+				},
 			})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			
+
 		}
 
 		for _, node := range cfg.Cluster.Nodes.Slave {
-			cli, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
-			cli.NegotiateAPIVersion(ctx)
+			dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+			dockerClient.NegotiateAPIVersion(ctx)
 
-			// start
-			err := slave.Up(ctx, cli, env.MesosSlave{
-				MESOS_HOSTNAME: node.Address.Internal,
-				MESOS_IP:       node.Address.Internal,
-				MESOS_MASTER:   fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+			// start mesos slave
+			err := container.Up(container.MesosSlave{
+				Ctx:          ctx,
+				DockerClient: dockerClient,
+				Env: env.MesosSlave{
+					MESOS_HOSTNAME: node.Address.Internal,
+					MESOS_IP:       node.Address.Internal,
+					MESOS_MASTER:   fmt.Sprintf("%s/mesos", compoundAddr.Zookeeper),
+				},
 			})
 			if err != nil {
 				fmt.Println(err.Error())

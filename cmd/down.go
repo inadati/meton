@@ -26,22 +26,22 @@ var DownCommand = &cli.Command{
 		cfg, _ := config.Yaml()
 
 		if targetNode != "" {
-			cli, _ := docker.Client(address.SSH(cfg.Cluster.Owner, targetNode, 0))
-			cli.NegotiateAPIVersion(ctx)
+			dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, targetNode, 0))
+			dockerClient.NegotiateAPIVersion(ctx)
 
 			// stop
-			err := container.Down(ctx, cli)
+			err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 		} else {
 
 			for _, node := range cfg.Cluster.Nodes.Master {
-				cli, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
-				cli.NegotiateAPIVersion(ctx)
+				dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+				dockerClient.NegotiateAPIVersion(ctx)
 	
 				// stop
-				err := container.Down(ctx, cli)
+				err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
 				if err != nil {
 					fmt.Println(err.Error())
 				}
@@ -49,11 +49,11 @@ var DownCommand = &cli.Command{
 			}
 	
 			for _, node := range cfg.Cluster.Nodes.Slave {
-				cli, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
-				cli.NegotiateAPIVersion(ctx)
+				dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+				dockerClient.NegotiateAPIVersion(ctx)
 	
 				// stop
-				err := container.Down(ctx, cli)
+				err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
 				if err != nil {
 					fmt.Println(err.Error())
 				}
