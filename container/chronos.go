@@ -12,26 +12,30 @@ import (
 	"github.com/meton888/meton/env"
 )
 
-type Chronos struct{}
+type Chronos struct{
+	Ctx context.Context
+	DockerClient *client.Client
+	Env env.Chronos
+}
 
-func (c *Chronos) Up(ctx context.Context, cli *client.Client, envs env.Chronos) error {
+func (c Chronos) up() error {
 	imageName := "mesoscloud/chronos"
 	containerName := "chronos"
 
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	out, err := c.DockerClient.ImagePull(c.Ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull %v image", imageName)
 	}
 	io.Copy(os.Stdout, out)
 
-	resp, err := cli.ContainerCreate(
-		ctx,
+	resp, err := c.DockerClient.ContainerCreate(
+		c.Ctx,
 		&container.Config{
 			Image: imageName,
 			Env: []string{
 				"CHRONOS_HTTP_PORT=4400",
-				fmt.Sprintf("CHRONOS_MASTER=%s", envs.CHRONOS_MASTER),
-				fmt.Sprintf("CHRONOS_ZK_HOSTS=%s", envs.CHRONOS_ZK_HOSTS),
+				fmt.Sprintf("CHRONOS_MASTER=%s", c.Env.CHRONOS_MASTER),
+				fmt.Sprintf("CHRONOS_ZK_HOSTS=%s", c.Env.CHRONOS_ZK_HOSTS),
 			},
 			// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
 		},
@@ -49,7 +53,7 @@ func (c *Chronos) Up(ctx context.Context, cli *client.Client, envs env.Chronos) 
 		return fmt.Errorf("failed to create %v container", containerName)
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := c.DockerClient.ContainerStart(c.Ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start %v container", containerName)
 	}
 

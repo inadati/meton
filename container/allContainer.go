@@ -8,20 +8,25 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func Down(ctx context.Context, cli *client.Client) error {
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+type All struct {
+	Ctx context.Context
+	DockerClient *client.Client
+}
+
+func (a All) down() error {
+	containers, err := a.DockerClient.ContainerList(a.Ctx, types.ContainerListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get container list")
 	}
 	for _, container := range containers {
 		// fmt.Println("Stopping container ", container.ID[:10], "... ")
-		if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
+		if err := a.DockerClient.ContainerStop(a.Ctx, container.ID, nil); err != nil {
 			return fmt.Errorf("failed to stopped %v container", container.Names[0])
 		}
 		fmt.Printf("stopped %v container\n", container.Names[0])
 
 		// fmt.Println("Removing container ", container.ID[:10], "... ")
-		if err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
+		if err := a.DockerClient.ContainerRemove(a.Ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
 			return fmt.Errorf("failed to removed %v container", container.Names[0])
 		}
 

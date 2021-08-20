@@ -13,26 +13,30 @@ import (
 	"github.com/meton888/meton/env"
 )
 
-type MesosSlave struct{}
+type MesosSlave struct{
+	Ctx context.Context
+	DockerClient *client.Client
+	Env env.MesosSlave
+}
 
-func (m *MesosSlave) Up(ctx context.Context, cli *client.Client, envs env.MesosSlave) error {
+func (m MesosSlave) up() error {
 	imageName := "mesoscloud/mesos-slave"
 	containerName := "mesos-slave"
 
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	out, err := m.DockerClient.ImagePull(m.Ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull %v image", imageName)
 	}
 	io.Copy(os.Stdout, out)
 
-	resp, err := cli.ContainerCreate(
-		ctx,
+	resp, err := m.DockerClient.ContainerCreate(
+		m.Ctx,
 		&container.Config{
 			Image: imageName,
 			Env: []string{
-				fmt.Sprintf("MESOS_HOSTNAME=%s", envs.MESOS_HOSTNAME),
-				fmt.Sprintf("MESOS_IP=%s", envs.MESOS_IP),
-				fmt.Sprintf("MESOS_MASTER=%s", envs.MESOS_MASTER),
+				fmt.Sprintf("MESOS_HOSTNAME=%s", m.Env.MESOS_HOSTNAME),
+				fmt.Sprintf("MESOS_IP=%s", m.Env.MESOS_IP),
+				fmt.Sprintf("MESOS_MASTER=%s", m.Env.MESOS_MASTER),
 				"MESOS_CONTAINERIZERS=docker,mesos",
 			},
 			// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
@@ -80,7 +84,7 @@ func (m *MesosSlave) Up(ctx context.Context, cli *client.Client, envs env.MesosS
 		return fmt.Errorf("failed to create %v container", containerName)
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := m.DockerClient.ContainerStart(m.Ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start %v container", containerName)
 	}
 

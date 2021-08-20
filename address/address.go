@@ -12,7 +12,7 @@ type Compound struct {
 	Zookeeper string
 }
 
-func (c *Compound) New(masterNodes []config.Node) {
+func (c *Compound) Init(masterNodes []config.Node) {
 	srvAddrBytes := make([]byte, 0, 128)
 	zkAddrBytes := make([]byte, 0, 128)
 
