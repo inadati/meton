@@ -13,81 +13,81 @@ import (
 	"github.com/meton888/meton/env"
 )
 
-type MesosSlave struct{
-	Ctx context.Context
-	DockerClient *client.Client
-	Env env.MesosSlave
+type mesosSlave struct {
+	Up func(context.Context, *client.Client, env.MesosSlave) error
 }
 
-func (m MesosSlave) up() error {
-	imageName := "mesoscloud/mesos-slave"
-	containerName := "mesos-slave"
+var slave = &mesosSlave{
+	Up: func(ctx context.Context, dockerClient *client.Client, e env.MesosSlave) error {
+		imageName := "mesoscloud/mesos-slave"
+		containerName := "mesos-slave"
 
-	out, err := m.DockerClient.ImagePull(m.Ctx, imageName, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to pull %v image", imageName)
-	}
-	io.Copy(os.Stdout, out)
+		out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to pull %v image", imageName)
+		}
+		io.Copy(os.Stdout, out)
 
-	resp, err := m.DockerClient.ContainerCreate(
-		m.Ctx,
-		&container.Config{
-			Image: imageName,
-			Env: []string{
-				fmt.Sprintf("MESOS_HOSTNAME=%s", m.Env.MESOS_HOSTNAME),
-				fmt.Sprintf("MESOS_IP=%s", m.Env.MESOS_IP),
-				fmt.Sprintf("MESOS_MASTER=%s", m.Env.MESOS_MASTER),
-				"MESOS_CONTAINERIZERS=docker,mesos",
+		resp, err := dockerClient.ContainerCreate(
+			ctx,
+			&container.Config{
+				Image: imageName,
+				Env: []string{
+					fmt.Sprintf("MESOS_HOSTNAME=%s", e.MESOS_HOSTNAME),
+					fmt.Sprintf("MESOS_IP=%s", e.MESOS_IP),
+					fmt.Sprintf("MESOS_MASTER=%s", e.MESOS_MASTER),
+					"MESOS_CONTAINERIZERS=docker,mesos",
+				},
+				// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
 			},
-			// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
-		},
-		&container.HostConfig{
-			NetworkMode: "host",
-			PidMode:     "host",
-			RestartPolicy: container.RestartPolicy{
-				Name: "always",
+			&container.HostConfig{
+				NetworkMode: "host",
+				PidMode:     "host",
+				RestartPolicy: container.RestartPolicy{
+					Name: "always",
+				},
+				Mounts: []mount.Mount{
+					mount.Mount{
+						Type:   mount.TypeBind,
+						Source: "/usr/bin/docker",
+						Target: "/usr/bin/docker",
+					},
+					mount.Mount{
+						Type:   mount.TypeBind,
+						Source: "/dev",
+						Target: "/dev",
+					},
+					mount.Mount{
+						Type:   mount.TypeBind,
+						Source: "/var/run/docker.sock",
+						Target: "/var/run/docker.sock",
+					},
+					mount.Mount{
+						Type:   mount.TypeBind,
+						Source: "/var/log/mesos",
+						Target: "/var/log/mesos",
+					},
+					mount.Mount{
+						Type:   mount.TypeBind,
+						Source: "/tmp/mesos",
+						Target: "/tmp/mesos",
+					},
+				},
+				Privileged: true,
 			},
-			Mounts: []mount.Mount{
-				mount.Mount{
-					Type:   mount.TypeBind,
-					Source: "/usr/bin/docker",
-					Target: "/usr/bin/docker",
-				},
-				mount.Mount{
-					Type:   mount.TypeBind,
-					Source: "/dev",
-					Target: "/dev",
-				},
-				mount.Mount{
-					Type:   mount.TypeBind,
-					Source: "/var/run/docker.sock",
-					Target: "/var/run/docker.sock",
-				},
-				mount.Mount{
-					Type:   mount.TypeBind,
-					Source: "/var/log/mesos",
-					Target: "/var/log/mesos",
-				},
-				mount.Mount{
-					Type:   mount.TypeBind,
-					Source: "/tmp/mesos",
-					Target: "/tmp/mesos",
-				},
-			},
-			Privileged: true,
-		},
-		nil,
-		nil,
-		containerName,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create %v container", containerName)
-	}
+			nil,
+			nil,
+			containerName,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create %v container", containerName)
+		}
 
-	if err := m.DockerClient.ContainerStart(m.Ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("failed to start %v container", containerName)
-	}
+		if err := dockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+			return fmt.Errorf("failed to start %v container", containerName)
+		}
 
-	// fmt.Println(resp.ID)
-	return nil
+		// fmt.Println(resp.ID)
+		return nil
+	},
 }
