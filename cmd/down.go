@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/meton888/meton/address"
 	"github.com/meton888/meton/config"
 	"github.com/meton888/meton/container"
 	"github.com/meton888/meton/docker"
+	"github.com/meton888/meton/endpoint"
 	"github.com/urfave/cli/v2"
 )
 
@@ -26,22 +26,22 @@ var DownCommand = &cli.Command{
 		cfg, _ := config.Yaml()
 
 		if targetNode != "" {
-			dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, targetNode, 0))
+			dockerClient, _ := docker.Client(endpoint.Node.SSH(cfg.Cluster.Owner, targetNode, 0))
 			dockerClient.NegotiateAPIVersion(ctx)
 
 			// stop
-			err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
+			err := container.All.Down(ctx, dockerClient)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 		} else {
 
 			for _, node := range cfg.Cluster.Nodes.Master {
-				dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+				dockerClient, _ := docker.Client(endpoint.Node.SSH(cfg.Cluster.Owner, node.Address.External, 0))
 				dockerClient.NegotiateAPIVersion(ctx)
 	
 				// stop
-				err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
+				err := container.All.Down(ctx, dockerClient)
 				if err != nil {
 					fmt.Println(err.Error())
 				}
@@ -49,11 +49,11 @@ var DownCommand = &cli.Command{
 			}
 	
 			for _, node := range cfg.Cluster.Nodes.Slave {
-				dockerClient, _ := docker.Client(address.SSH(cfg.Cluster.Owner, node.Address.External, 0))
+				dockerClient, _ := docker.Client(endpoint.Node.SSH(cfg.Cluster.Owner, node.Address.External, 0))
 				dockerClient.NegotiateAPIVersion(ctx)
 	
 				// stop
-				err := container.DownAll(container.All{Ctx: ctx, DockerClient: dockerClient})
+				err := container.All.Down(ctx, dockerClient)
 				if err != nil {
 					fmt.Println(err.Error())
 				}
