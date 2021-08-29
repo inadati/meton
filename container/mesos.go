@@ -1,8 +1,8 @@
 package container
 
 type mesos struct {
-	Master mesosMaster
-	Slave  mesosSlave
+	Master MesosMasterRecipe
+	Slave  MesosSlaveRecipe
 }
 
 var Mesos = &mesos{
