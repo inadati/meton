@@ -1,19 +1,17 @@
 package endpoint
 
-type localHost struct {
-	Marathon    func() string
-	MesosMaster func() string
-	Chronos     func() string
+type LocalHostRecipe struct{}
+
+var LocalHost = &LocalHostRecipe{}
+
+func (r *LocalHostRecipe) Marathon() string {
+	return "0.0.0.0:8080"
 }
 
-var LocalHost = &localHost{
-	Marathon: func() string {
-		return "0.0.0.0:8080"
-	},
-	MesosMaster: func() string {
-		return "0.0.0.0:5050"
-	},
-	Chronos: func() string {
-		return "0.0.0.0:4400"
-	},
+func (r *LocalHostRecipe) MesosMaster() string {
+	return "0.0.0.0:5050"
+}
+
+func (r *LocalHostRecipe) Chronos() string {
+	return "0.0.0.0:4400"
 }
