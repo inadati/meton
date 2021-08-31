@@ -1,4 +1,4 @@
-# METON
+# meton
 
 ## Commands
 - [x] up(クラスタ構築&ノードの追加)
