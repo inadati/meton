@@ -9,8 +9,9 @@ import (
 
 type Config struct {
 	Cluster struct {
-		Owner string `yaml:"owner"`
-		Nodes struct {
+		Owner   string `yaml:"owner"`
+		KeyFile string `yaml:"keyFile"`
+		Nodes   struct {
 			Master []Node
 			Slave  []Node
 		}

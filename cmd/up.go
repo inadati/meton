@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/meton888/meton/config"
 	"github.com/meton888/meton/container"
 	"github.com/meton888/meton/docker"
 	"github.com/meton888/meton/endpoint"
@@ -16,8 +15,6 @@ var UpCommand = &cli.Command{
 	Usage: "Bring the cluster up",
 	Flags: []cli.Flag{},
 	Action: func(c *cli.Context) error {
-		cfg, _ := config.Yaml()
-
 		svrsAddr, zkAddr := endpoint.MasterNode.AddrCollection(cfg.Cluster.Nodes.Master)
 
 		for i, node := range cfg.Cluster.Nodes.Master {
@@ -28,7 +25,7 @@ var UpCommand = &cli.Command{
 			err := container.Zookeeper.Up(ctx, dockerClient, env.Zookeeper{
 				MYID:    i + 1,
 				SERVERS: svrsAddr,
-			},)
+			})
 			if err != nil {
 				fmt.Println(err.Error())
 			}
