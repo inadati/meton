@@ -1,5 +1,6 @@
 cluster:
   owner: inadati
+  keyFile: ~/.ssh/id_rsa
   nodes:
     master:
       - address:

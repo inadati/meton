@@ -31,6 +31,7 @@ func exec() error {
 	app.Commands = []*cli.Command{
 		cmd.UpCommand,
 		cmd.DownCommand,
+		cmd.TunnelCommand,
 	}
 
 	return app.Run(os.Args)
