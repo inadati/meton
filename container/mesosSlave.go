@@ -18,7 +18,7 @@ type MesosSlaveRecipe struct{}
 var slave = &MesosSlaveRecipe{}
 
 func (r *MesosSlaveRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.MesosSlave) error {
-	imageName := "mesoscloud/mesos-slave"
+	imageName := "meton/mesos-slave:1.9.0-centos-7"
 	containerName := "mesos-slave"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})
