@@ -17,7 +17,7 @@ type ChronosRecipe struct {}
 var Chronos = &ChronosRecipe{}
 
 func (r *ChronosRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.Chronos) error {
-	imageName := "mesoscloud/chronos"
+	imageName := "meton/chronos:2.4.0-centos-7"
 	containerName := "chronos"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})

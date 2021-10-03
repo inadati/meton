@@ -24,7 +24,7 @@ type ZookeeperRecipe struct{}
 var Zookeeper = &ZookeeperRecipe{}
 
 func (r *ZookeeperRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.Zookeeper) error {
-	imageName := "mesoscloud/zookeeper"
+	imageName := "meton/zookeeper:3.4.8-centos-7"
 	containerName := "zookeeper"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})

@@ -17,7 +17,7 @@ type MarathonRecipe struct{}
 var Marathon = &MarathonRecipe{}
 
 func (r *MarathonRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.Marathon) error {
-	imageName := "mesoscloud/marathon"
+	imageName := "meton/marathon:1.1.1-centos-7"
 	containerName := "marathon"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})
