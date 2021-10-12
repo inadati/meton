@@ -17,7 +17,7 @@ type MarathonRecipe struct{}
 var Marathon = &MarathonRecipe{}
 
 func (r *MarathonRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.Marathon) error {
-	imageName := "meton/marathon:1.1.1-centos-7"
+	imageName := "meton/marathon:1.8.222-centos-7"
 	containerName := "marathon"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})
@@ -37,7 +37,7 @@ func (r *MarathonRecipe) Up(ctx context.Context, dockerClient *client.Client, e 
 				fmt.Sprintf("MARATHON_MASTER=%s", e.MARATHON_MASTER),
 				fmt.Sprintf("MARATHON_ZK=%s", e.MARATHON_ZK),
 			},
-			// Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
+			Cmd: []string{"/bin/sh", "-c", "while :; do sleep 10; done"},
 		},
 		&container.HostConfig{
 			NetworkMode: "host",
