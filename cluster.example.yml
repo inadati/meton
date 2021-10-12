@@ -1,0 +1,14 @@
+cluster:
+  owner: owner_name
+  keyFile: secret_key_path
+  nodes:
+    master:
+      - address:
+        external: 34.0.0.0
+        internal: 10.0.0.0
+
+    slave:
+      - address:
+        external: 34.0.0.0
+        internal: 10.0.0.0
+
