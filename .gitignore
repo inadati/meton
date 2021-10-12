@@ -2,3 +2,4 @@ meton
 meton_darwin-amd64
 meton_linux-amd64
 .psc-ide-port
+cluster.yml
