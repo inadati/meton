@@ -18,7 +18,7 @@ var master = &MesosMasterRecipe{}
 
 func (r *MesosMasterRecipe) Up(ctx context.Context, dockerClient *client.Client, e env.MesosMaster) error {
 	// imageName := "mesoscloud/mesos-master"
-	imageName := "meton/mesos-master:1.9.0-centos-7"
+	imageName := "meton/mesos-master"
 	containerName := "mesos-master"
 
 	out, err := dockerClient.ImagePull(ctx, imageName, types.ImagePullOptions{})
